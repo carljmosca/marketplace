@@ -80,6 +80,16 @@ marketplace/
 │       ├── nest-test/
 │       ├── react-test/
 │       └── playwright-test/
+├── aiup-dsl/                     # Java DSL (ANTLR + FSM + LSP + VS Code) technology stack plugin
+│   ├── .claude-plugin/
+│   │   └── plugin.json           # Claude Code manifest
+│   ├── .mcp.json                 # JavaDocs
+│   ├── plugin.json               # Agent Plugins manifest (agent-plugins.org)
+│   ├── mcp.json                  # Agent Plugins MCP config
+│   └── skills/                   # All workflow steps as skills (slash commands)
+│       ├── implement-dsl/
+│       ├── implement-dsl-lsp/
+│       └── implement-dsl-vscode-extension/
 ├── docs/                         # User guides, installation docs, and reusable templates
 ├── pipelines/                    # Shared Bitbucket generation workflow implementation
 ├── scripts/                      # Validation and publication helpers
@@ -95,6 +105,7 @@ marketplace/
 - **angular-jpa** — Stack-specific: implementation and testing for the Angular + JPA stack. Requires core.
 - **blazor-dotnet** — Stack-specific: implementation and testing for C# / Blazor on .NET 10. Requires core.
 - **nestjs-nextjs** — Stack-specific: implementation and testing for NestJS / Drizzle and Next.js. Requires core.
+- **dsl** — Stack-specific: Java 21 DSL with ANTLR 4, FSM, session API, Eclipse LSP4J, and VS Code extension. Requires core.
 
 ### Marketplace Configuration
 
@@ -208,6 +219,14 @@ checklist from the agent file directly.
 
 Each stack plugin ships its own `/implement` and testing skills. Install exactly one stack plugin with `aiup-core` in
 a project so commands shared by several stack plugins do not collide.
+
+### Java DSL / ANTLR / FSM (stack-specific)
+
+| Phase        | Skill (slash command)                 | Description                                                                              |
+|--------------|---------------------------------------|------------------------------------------------------------------------------------------|
+| Construction | `/implement-dsl`                      | Implement ANTLR grammar, Java 21 FSM, evaluation engine, REPL, and session JSON REST API |
+| Construction | `/implement-dsl-lsp`                  | Implement Eclipse LSP4J Language Server Protocol daemon with ANTLR and FSM diagnostics   |
+| Construction | `/implement-dsl-vscode-extension`     | Implement VS Code extension packaging and launching the Java LSP server over stdio      |
 
 ## Copyright and attribution
 

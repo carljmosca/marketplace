@@ -30,6 +30,11 @@
       "name": "aiup-nestjs-nextjs",
       "source": "./aiup-nestjs-nextjs",
       "description": "AI Unified Process for the NestJS/Drizzle + Next.js stack - migrations, implementation, tests"
+    },
+    {
+      "name": "aiup-dsl",
+      "source": "./aiup-dsl",
+      "description": "AI Unified Process for Java DSLs - ANTLR grammar, finite state machines, LSP, VS Code extension"
     }
   ]
 }

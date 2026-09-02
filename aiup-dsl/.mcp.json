@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "JavaDocs": {
+      "type": "http",
+      "url": "https://www.javadocs.dev/mcp"
+    }
+  }
+}
+
