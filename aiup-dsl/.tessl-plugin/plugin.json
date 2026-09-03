@@ -1,6 +1,6 @@
 {
   "name": "ai-unified-process/aiup-dsl",
-  "description": "AI Unified Process for Java DSLs - ANTLR grammar, finite state machines, LSP, VS Code extension",
+  "description": "AI Unified Process for Java DSLs - ANTLR grammar, finite state machines, MCP server, LSP, VS Code extension",
   "version": "0.1.0",
   "author": {
     "name": "Carl J. Mosca",

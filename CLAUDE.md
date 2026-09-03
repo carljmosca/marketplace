@@ -80,7 +80,7 @@ marketplace/
 │       ├── nest-test/
 │       ├── react-test/
 │       └── playwright-test/
-├── aiup-dsl/                     # Java DSL (ANTLR + FSM + LSP + VS Code) technology stack plugin
+├── aiup-dsl/                     # Java DSL (ANTLR + FSM + MCP + LSP + VS Code) technology stack plugin
 │   ├── .claude-plugin/
 │   │   └── plugin.json           # Claude Code manifest
 │   ├── .mcp.json                 # JavaDocs
@@ -88,6 +88,7 @@ marketplace/
 │   ├── mcp.json                  # Agent Plugins MCP config
 │   └── skills/                   # All workflow steps as skills (slash commands)
 │       ├── implement-dsl/
+│       ├── implement-dsl-mcp/
 │       ├── implement-dsl-lsp/
 │       └── implement-dsl-vscode-extension/
 ├── docs/                         # User guides, installation docs, and reusable templates
@@ -105,7 +106,7 @@ marketplace/
 - **angular-jpa** — Stack-specific: implementation and testing for the Angular + JPA stack. Requires core.
 - **blazor-dotnet** — Stack-specific: implementation and testing for C# / Blazor on .NET 10. Requires core.
 - **nestjs-nextjs** — Stack-specific: implementation and testing for NestJS / Drizzle and Next.js. Requires core.
-- **dsl** — Stack-specific: Java 21 DSL with ANTLR 4, FSM, session API, Eclipse LSP4J, and VS Code extension. Requires core.
+- **dsl** — Stack-specific: Java 21 DSL with ANTLR 4, FSM, session API, MCP server, Eclipse LSP4J, and VS Code extension. Requires core.
 
 ### Marketplace Configuration
 
@@ -225,6 +226,7 @@ a project so commands shared by several stack plugins do not collide.
 | Phase        | Skill (slash command)                 | Description                                                                              |
 |--------------|---------------------------------------|------------------------------------------------------------------------------------------|
 | Construction | `/implement-dsl`                      | Implement ANTLR grammar, Java 21 FSM, evaluation engine, REPL, and session JSON REST API |
+| Construction | `/implement-dsl-mcp`                  | Implement Model Context Protocol (MCP) server exposing tools, resources, and prompts     |
 | Construction | `/implement-dsl-lsp`                  | Implement Eclipse LSP4J Language Server Protocol daemon with ANTLR and FSM diagnostics   |
 | Construction | `/implement-dsl-vscode-extension`     | Implement VS Code extension packaging and launching the Java LSP server over stdio      |
 

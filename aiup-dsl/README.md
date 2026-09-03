@@ -9,7 +9,8 @@ Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE.
 `aiup-dsl` is the AI Unified Process construction plugin for Java-based Domain-Specific Languages (DSLs) leveraging ANTLR 4
 and Finite State Machines (FSMs). It turns the domain entity model and use case specifications produced by
 [`aiup-core`](../aiup-core/) into an ANTLR 4 grammar, a lightweight Java 21 finite state machine, an interactive natural
-language REPL, a session-aware Spring Boot JSON REST API, an Eclipse LSP4J language server, and a Visual Studio Code extension.
+language REPL, a session-aware Spring Boot JSON REST API, a Model Context Protocol (MCP) server, an Eclipse LSP4J language
+server, and a Visual Studio Code extension.
 
 This plugin is designed to continue from the specifications produced by `aiup-core`. For the complete AI Unified Process workflow,
 use it alongside `aiup-core`.
@@ -19,13 +20,14 @@ use it alongside `aiup-core`.
 | Phase        | Skill                                                                                 | Result                                                                               |
 |--------------|---------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
 | Construction | [`/implement-dsl`](skills/implement-dsl/SKILL.md)                                     | ANTLR grammar, Java 21 FSM, evaluation engine, interactive REPL, session JSON REST API |
+| Construction | [`/implement-dsl-mcp`](skills/implement-dsl-mcp/SKILL.md)                             | Model Context Protocol (MCP) server for AI agents to validate, query, and execute DSL |
 | Construction | [`/implement-dsl-lsp`](skills/implement-dsl-lsp/SKILL.md)                             | Eclipse LSP4J server daemon with ANTLR diagnostics and FSM-driven completions        |
 | Construction | [`/implement-dsl-vscode-extension`](skills/implement-dsl-vscode-extension/SKILL.md) | VS Code extension client packaging and launching the Java LSP server                |
 
 ```text
 Construction
-─────────────────────────────────────────────────────────────────────────────
-/implement-dsl  →  /implement-dsl-lsp  →  /implement-dsl-vscode-extension
+────────────────────────────────────────────────────────────────────────────────────────
+/implement-dsl  →  /implement-dsl-mcp  →  /implement-dsl-lsp  →  /implement-dsl-vscode-extension
 ```
 
 The linked `SKILL.md` files are the authoritative reference for detailed inputs, outputs, and behavior.
@@ -87,6 +89,8 @@ your-solution/
 │   └── src/main/java/.../
 │       ├── controller/              # Session-based REST endpoints
 │       └── session/                 # DslSessionRepository & session lifecycle
+├── <domain>-mcp/                     # /implement-dsl-mcp: Model Context Protocol server
+│   └── src/main/java/.../           # MCP tools, resources, prompts (stdio / SSE)
 ├── <domain>-lsp/                     # /implement-dsl-lsp: Eclipse LSP4J server
 │   └── src/main/java/.../           # LSP4J handlers, diagnostics, completions, hover
 └── <domain>-vscode/                  # /implement-dsl-vscode-extension: VS Code extension
