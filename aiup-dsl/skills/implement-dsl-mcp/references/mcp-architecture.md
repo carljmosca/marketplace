@@ -6,41 +6,43 @@ Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE.
 
 # Model Context Protocol (MCP) Architecture for Java DSLs
 
-This reference outlines the module layout, server capabilities, tools, resources, and prompt endpoints required to implement a Model Context Protocol (MCP) server for a Java 21 DSL.
+This reference outlines how to build an MCP application that wraps and exposes a reusable Java DSL library (`<domain>-dsl.jar`) to AI agents and downstream AIUP workflows.
 
-The resulting MCP server enables AI agents (such as Claude Code, Cursor, Copilot, Gemini, and Antigravity) and downstream AIUP construction skills to author, validate, and execute DSL code programmatically.
+Like the Vaadin MCP server provides tools and context to build Vaadin web applications, the DSL MCP server equips LLMs with grammar syntax, semantic validation, and runtime execution tools to build applications that consume the DSL.
 
-## Module Structure
+## Multi-Module Layout
 
 ```text
-<domain>-mcp/
-├── pom.xml
-└── src/main/java/.../mcp/
-    ├── DslMcpServerApplication.java  # Main entry point & transport configuration (stdio / SSE)
-    ├── config/
-    │   └── McpServerConfig.java      # Server capability registration (Tools, Resources, Prompts)
-    ├── tools/
-    │   ├── DslValidationTools.java   # Syntax and FSM semantic validation tools
-    │   ├── DslExecutionTools.java    # Stateful and stateless execution tools
-    │   └── DslTransitionTools.java  # Next available transition inspection tools
-    ├── resources/
-    │   ├── DslGrammarResource.java   # Exposes .g4 grammar and lexer/parser rules
-    │   ├── DslFsmResource.java       # Exposes state graph, events, and business rules
-    │   └── DslExamplesResource.java  # Exposes canonical valid DSL scripts per use case
-    └── prompts/
-        └── DslPromptTemplates.java   # Structured prompts for DSL script authoring & debugging
+<domain>-parent/
+├── <domain>-dsl/                     # Reusable core library (JAR)
+│   ├── pom.xml
+│   └── src/main/java/...             # DslEngine, Grammar, FSM, AST visitor
+└── <domain>-mcp/                     # Standalone MCP server application
+    ├── pom.xml                       # Depends on <domain>-dsl
+    └── src/main/java/.../mcp/
+        ├── DslMcpServerApplication.java  # Main entry point & transport configuration (stdio / SSE)
+        ├── config/
+        │   └── McpServerConfig.java      # Server capability registration (Tools, Resources, Prompts)
+        ├── tools/
+        │   ├── DslValidationTools.java   # Syntax and FSM semantic validation tools (delegates to DslEngine)
+        │   ├── DslExecutionTools.java    # Stateful and stateless execution tools (delegates to DslEngine)
+        │   └── DslTransitionTools.java  # Next available transition inspection tools
+        ├── resources/
+        │   ├── DslGrammarResource.java   # Exposes .g4 grammar and lexer/parser rules
+        │   ├── DslFsmResource.java       # Exposes state graph, events, and business rules
+        │   └── DslExamplesResource.java  # Exposes canonical valid DSL scripts per use case
+        └── prompts/
+            └── DslPromptTemplates.java   # Structured prompts for DSL script authoring & debugging
 ```
 
-## Maven Dependencies
-
-The MCP server can be implemented using the official Java Model Context Protocol SDK (`io.modelcontextprotocol.sdk:mcp`) or the Spring AI MCP Server Starter (`org.springframework.ai:spring-ai-mcp-server-spring-boot-starter`).
+## Maven Dependencies (`<domain>-mcp/pom.xml`)
 
 ```xml
 <dependencies>
-    <!-- Core DSL Engine (Grammar, AST Visitor, FSM) -->
+    <!-- Reusable DSL Library Dependency -->
     <dependency>
         <groupId>${project.groupId}</groupId>
-        <artifactId><domain>-core</artifactId>
+        <artifactId><domain>-dsl</artifactId>
         <version>${project.version}</version>
     </dependency>
 
@@ -67,9 +69,9 @@ Tools are callable functions that allow an AI agent to validate, evaluate, and i
 
 | Tool Name | Parameters | Description |
 |-----------|------------|-------------|
-| `validate_dsl` | `script` (string) | Parses DSL text with ANTLR and validates statement sequence against FSM rules. Returns syntax/semantic errors with line/column coordinates. |
-| `execute_dsl` | `sessionId` (optional UUID), `command` (string) | Executes a DSL command against a stateful session or temporary sandbox. Returns execution status, updated state, and output data. |
-| `get_available_transitions` | `sessionId` (optional UUID), `currentState` (optional string) | Returns valid next commands and allowed transitions based on the active FSM state and business rule guards. |
+| `validate_dsl` | `script` (string) | Delegates to `DslEngine.validate(script)`. Returns syntax and FSM semantic errors with line/column coordinates. |
+| `execute_dsl` | `sessionId` (optional UUID), `command` (string) | Delegates to `DslEngine.executeInSession(sessionId, command)` or `DslEngine.execute(command)`. Returns execution status, updated state, and output data. |
+| `get_available_transitions` | `sessionId` (optional UUID), `currentState` (optional string) | Returns valid next commands and allowed transitions based on active FSM state and business rule guards. |
 | `explain_verb` | `verb` (string) | Returns documentation, syntax variants, parameters, and business rules for a specific domain keyword/action. |
 
 #### Example Tool Implementation (`validate_dsl`)
@@ -77,34 +79,8 @@ Tools are callable functions that allow an AI agent to validate, evaluate, and i
 ```java
 @McpTool(name = "validate_dsl", description = "Validates DSL syntax and FSM lifecycle transitions")
 public ValidationResult validateDsl(@McpParam(name = "script") String script) {
-    List<ValidationError> errors = new ArrayList<>();
-
-    // 1. ANTLR syntax validation
-    CharStream charStream = CharStreams.fromString(script);
-    OrderDslLexer lexer = new OrderDslLexer(charStream);
-    CommonTokenStream tokens = new CommonTokenStream(lexer);
-    OrderDslParser parser = new OrderDslParser(tokens);
-
-    parser.removeErrorListeners();
-    parser.addErrorListener(new BaseErrorListener() {
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
-                                int line, int charPositionInLine, String msg,
-                                RecognitionException e) {
-            errors.add(new ValidationError(line, charPositionInLine, "SYNTAX", msg));
-        }
-    });
-
-    OrderDslParser.ScriptContext tree = parser.script();
-
-    // 2. FSM semantic validation
-    if (errors.isEmpty()) {
-        FsmValidator validator = new FsmValidator();
-        errors.addAll(validator.validateTransitions(tree));
-    }
-
-    boolean valid = errors.isEmpty();
-    return new ValidationResult(valid, valid ? "Script is valid" : "Validation failed", errors);
+    // Directly delegate to the reusable DSL library's engine
+    return dslEngine.validate(script);
 }
 ```
 
@@ -133,7 +109,7 @@ Prompts provide pre-engineered prompt workflows for agents working with the DSL:
 
 ### Stdio Transport (Local Developer & CLI Agents)
 
-Standard I/O transport is packaged as a runnable fat JAR. In `~/.claude.json` or project `.mcp.json`:
+Packaged as a runnable fat JAR. In `~/.claude.json` or project `.mcp.json`:
 
 ```json
 {
@@ -149,8 +125,6 @@ Standard I/O transport is packaged as a runnable fat JAR. In `~/.claude.json` or
 
 ### Streamable HTTP / SSE Transport (Remote / Shared Service)
 
-For team environments or web-based AIUP pipelines:
-
 ```json
 {
   "mcpServers": {
@@ -161,4 +135,3 @@ For team environments or web-based AIUP pipelines:
   }
 }
 ```
-

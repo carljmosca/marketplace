@@ -1,13 +1,13 @@
 ---
 name: implement-dsl
 description: >
-  Implements a Domain-Specific Language (DSL) in Java 21 leveraging ANTLR 4 and
-  Finite State Machines (FSM). Takes use case specifications (UC-*.md) and entity
-  models (docs/entity_model.md) to generate an ANTLR 4 grammar (.g4), a lightweight
-  Java 21 sealed state machine, an AST visitor execution engine, an interactive
-  natural language REPL, and a session-aware Spring Boot JSON REST API. Use when
-  the user asks to "implement a DSL", "create ANTLR grammar", "build state machine",
-  "create DSL API", or mentions DSL implementation.
+  Implements a reusable Domain-Specific Language (DSL) library (JAR) in Java 21
+  leveraging ANTLR 4 and Finite State Machines (FSM). Takes use case specifications
+  (UC-*.md) and entity models (docs/entity_model.md) to generate an ANTLR 4 grammar
+  (.g4), a Java 21 sealed state machine, an AST visitor execution engine, a
+  programmatic Java API (DslEngine, DslSession), and an interactive natural
+  language REPL. Packaged as a standalone reusable library JAR for use by MCP
+  servers, LSP daemons, and host applications.
 ---
 
 <!--
@@ -16,17 +16,20 @@ Part of the AI Unified Process — https://unifiedprocess.ai
 Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE.
 -->
 
-# Implement DSL (Java 21 / ANTLR 4 / FSM)
+# Implement Reusable DSL Library (Java 21 / ANTLR 4 / FSM)
 
 ## Goal
 
-Implement a Domain-Specific Language (DSL) for the specified domain use cases (`UC-XXX.md`) and entity model
+Implement a **reusable Java library (`<domain>-dsl.jar`)** for the specified domain use cases (`UC-XXX.md`) and entity model
 (`docs/entity_model.md`) in Java 21, creating:
 1. An **ANTLR 4 grammar** (`.g4`) supporting natural, readable domain syntax and command synonyms.
 2. A **Java 21 Finite State Machine (FSM)** enforcing lifecycle invariants, state transitions, and business rules (`BR-*`).
 3. An **AST Visitor Execution Engine** evaluating statements against active state machine sessions.
-4. An **Interactive Natural Language REPL** (using JLine) providing tab completion, command history, and state-aware guidance.
-5. A **Session-Aware Spring Boot JSON REST API** providing stateful session management with rich JSON request/response payloads (`availableTransitions`) for headless UI/UX frontends.
+4. A **Programmatic Public Java API** (`DslEngine`, `DslSession`, `DslParser`, `EvaluationResult`, `ValidationResult`) for seamless embedding into host applications, MCP servers, and language servers.
+5. An **In-Memory Session Repository** (`DslSessionRepository`, `InMemoryDslSessionRepository`) supporting stateful session lifecycles.
+6. An **Interactive Natural Language REPL** (using JLine) providing tab completion, command history, and state-aware guidance for CLI usage.
+
+The resulting artifact is a **reusable library JAR** that can be published to a Maven repository and consumed by downstream applications, including the Model Context Protocol (MCP) server, the Language Server Protocol (LSP) daemon, and host backend systems.
 
 ## If an Implementation Already Exists
 
@@ -36,7 +39,7 @@ Before writing new code, check whether the DSL grammar or state machine already 
 - Compare changes in use cases (new steps, renamed verbs, changed business rules, new states).
 - Update the ANTLR `.g4` file to include new verbs/rules.
 - Update the Java 21 sealed state and event hierarchy to reflect new states or transitions.
-- Update the visitor evaluator and API handlers in place.
+- Update the visitor evaluator and programmatic API handlers in place.
 
 ## Workflow & Conventions
 
@@ -45,14 +48,39 @@ Before writing new code, check whether the DSL grammar or state machine already 
    - Read `docs/entity_model.md` to understand entities, attributes, and relationships.
    - Read `docs/use_cases.puml` and `docs/use_cases/UC-XXX-*.md` to understand user actions, main success flows, alternative flows, preconditions, and postconditions.
 
-2. **Domain Grammar Design (`src/main/antlr4/<Domain>.g4`)**:
+2. **Project Setup (`<domain>-dsl/pom.xml`)**:
+   - Configure the module as a reusable Java library:
+     ```xml
+     <groupId>com.example</groupId>
+     <artifactId><domain>-dsl</artifactId>
+     <version>0.1.0-SNAPSHOT</version>
+     <packaging>jar</packaging>
+
+     <dependencies>
+         <!-- ANTLR 4 Runtime -->
+         <dependency>
+             <groupId>org.antlr</groupId>
+             <artifactId>antlr4-runtime</artifactId>
+             <version>4.13.2</version>
+         </dependency>
+         <!-- JLine 3 (optional CLI/REPL support) -->
+         <dependency>
+             <groupId>org.jline</groupId>
+             <artifactId>jline</artifactId>
+             <version>3.26.3</version>
+             <optional>true</optional>
+         </dependency>
+     </dependencies>
+     ```
+
+3. **Domain Grammar Design (`src/main/antlr4/<Domain>.g4`)**:
    - Structure grammar with clear lexer and parser rules.
-   - Support expressive, human-readable domain phrasing (e.g. `create order for customer "Alice"`).
+   - Support expressive, human-readable domain phrasing (e.g. `debit 150.00 USD to "1010"`).
    - Provide synonyms for common verbs where appropriate (e.g. `create | new | make`).
    - Include custom `ANTLRErrorListener` to capture syntax errors with exact line and column numbers.
    - Consult [references/grammar-guidelines.md](references/grammar-guidelines.md) for patterns.
 
-3. **Java 21 Finite State Machine (`fsm/`)**:
+4. **Java 21 Finite State Machine (`fsm/`)**:
    - Model states using Java 21 sealed interfaces and records:
      ```java
      public sealed interface OrderState permits DraftState, SubmittedState, ApprovedState, CancelledState {}
@@ -66,46 +94,38 @@ Before writing new code, check whether the DSL grammar or state machine already 
    - Enforce business rules (`BR-*`) as transition guards: if a rule fails, return a failed transition result without advancing the state.
    - Consult [references/fsm-architecture.md](references/fsm-architecture.md) for detailed patterns.
 
-4. **AST Visitor & Execution Engine (`engine/`)**:
+5. **AST Visitor & Execution Engine (`engine/`)**:
    - Extend the ANTLR-generated `<Domain>BaseVisitor<ExecutionResult>`.
    - Dispatch parsed AST nodes to the active session's FSM instance.
    - Collect domain outputs, error messages, and mutated session state.
 
-5. **Interactive Natural Language REPL (`repl/`)**:
-   - Build an interactive terminal shell using JLine 3.
-   - Provide command history, line editing, and ANSI-colored prompt displaying the current session state.
-   - Implement tab completion that queries the active session's FSM for `availableTransitions`.
-   - Provide helpful hints or prompt for missing parameters when a command is incomplete.
-
-6. **Session-Aware Spring Boot JSON REST API (`api/`)**:
-   - Controller endpoints managing stateful sessions:
-     - `POST /api/dsl/sessions`: creates a new session, initializes FSM to start state, returns `sessionId`, `currentState`, and initial `availableTransitions`.
-     - `POST /api/dsl/sessions/{sessionId}/execute`: receives JSON payload `{ "command": "..." }`, evaluates against the session's FSM, updates state, and returns response JSON.
-     - `GET /api/dsl/sessions/{sessionId}`: inspects current state, variables, and `availableTransitions` without state mutation.
-     - `DELETE /api/dsl/sessions/{sessionId}`: removes the session.
-   - Standard JSON response format:
-     ```json
-     {
-       "sessionId": "123e4567-e89b-12d3-a456-426614174000",
-       "status": "SUCCESS",
-       "currentState": "AWAITING_PAYMENT",
-       "message": "Item added successfully",
-       "data": { "item": "Widget", "quantity": 2, "total": 39.98 },
-       "availableTransitions": ["SUBMIT_PAYMENT", "CANCEL_ORDER"],
-       "errors": []
+6. **Programmatic Public Java API (`api/`)**:
+   - Expose clean facade classes for downstream library consumers:
+     ```java
+     public class DslEngine {
+         public ValidationResult validate(String script);
+         public EvaluationResult execute(String script);
+         public EvaluationResult executeInSession(UUID sessionId, String command);
+         public List<String> getAvailableTransitions(UUID sessionId);
      }
      ```
-   - Implement `DslSessionRepository` with default `ConcurrentHashMap<UUID, DslSession>` and sliding expiration cleanup.
-   - Consult [references/session-api-spec.md](references/session-api-spec.md) for endpoint contracts.
+   - Implement `DslSessionRepository` and `InMemoryDslSessionRepository` with `ConcurrentHashMap<UUID, DslSession>` and sliding expiration cleanup.
+   - Consult [references/session-api-spec.md](references/session-api-spec.md) for API contracts and session management.
 
-7. **Compilation & Verification**:
-   - Run Maven (`mvn clean compile test`) or Gradle (`./gradlew test`) to verify grammar generation and clean compilation.
+7. **Interactive Natural Language REPL (`repl/`)**:
+   - Build an interactive terminal shell using JLine 3.
+   - Provide command history, line editing, and ANSI-colored prompt displaying current session state.
+   - Implement tab completion that queries the active session's FSM for `availableTransitions`.
 
-8. **Next Step Guidance**:
-   - Conclude by summarizing the generated DSL components and guiding the user to the next phase:
+8. **Compilation & Packaging**:
+   - Run `mvn clean install` to compile grammar, run unit tests, and install `<domain>-dsl.jar` into the local Maven repository.
+
+9. **Next Step Guidance**:
+   - Guide the user to implement the Model Context Protocol server:
      ```text
-     The DSL grammar, FSM, and session API have been implemented.
-     To generate the Language Server Protocol (LSP) daemon for IDE integration, run:
+     The reusable DSL library has been built and installed as <domain>-dsl.jar.
+     To implement the Model Context Protocol (MCP) server application that wraps this library for AI agents, run:
+       /implement-dsl-mcp
+     To implement the Eclipse LSP4J language server daemon, run:
        /implement-dsl-lsp
      ```
-

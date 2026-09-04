@@ -8,9 +8,11 @@ Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE.
 
 `aiup-dsl` is the AI Unified Process construction plugin for Java-based Domain-Specific Languages (DSLs) leveraging ANTLR 4
 and Finite State Machines (FSMs). It turns the domain entity model and use case specifications produced by
-[`aiup-core`](../aiup-core/) into an ANTLR 4 grammar, a lightweight Java 21 finite state machine, an interactive natural
-language REPL, a session-aware Spring Boot JSON REST API, a Model Context Protocol (MCP) server, an Eclipse LSP4J language
-server, and a Visual Studio Code extension.
+[`aiup-core`](../aiup-core/) into:
+1. A **reusable Java library (`<domain>-dsl.jar`)** containing the ANTLR 4 grammar, Java 21 finite state machine, evaluation engine, programmatic Java API, and interactive REPL.
+2. A **Model Context Protocol (MCP) server application (`<domain>-mcp`)** that leverages the library to provide AI agents with DSL discovery, validation, and execution capabilities.
+3. An **Eclipse LSP4J language server daemon (`<domain>-lsp`)** that leverages the library to provide real-time editor diagnostics, completions, and hover documentation.
+4. A **Visual Studio Code extension (`<domain>-vscode`)** packaging TextMate syntax highlighting and launching the Java LSP server over stdio.
 
 This plugin is designed to continue from the specifications produced by `aiup-core`. For the complete AI Unified Process workflow,
 use it alongside `aiup-core`.
@@ -19,9 +21,9 @@ use it alongside `aiup-core`.
 
 | Phase        | Skill                                                                                 | Result                                                                               |
 |--------------|---------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| Construction | [`/implement-dsl`](skills/implement-dsl/SKILL.md)                                     | ANTLR grammar, Java 21 FSM, evaluation engine, interactive REPL, session JSON REST API |
-| Construction | [`/implement-dsl-mcp`](skills/implement-dsl-mcp/SKILL.md)                             | Model Context Protocol (MCP) server for AI agents to validate, query, and execute DSL |
-| Construction | [`/implement-dsl-lsp`](skills/implement-dsl-lsp/SKILL.md)                             | Eclipse LSP4J server daemon with ANTLR diagnostics and FSM-driven completions        |
+| Construction | [`/implement-dsl`](skills/implement-dsl/SKILL.md)                                     | Reusable Java DSL library (`.jar`), ANTLR grammar, Java 21 FSM, public Java API, REPL |
+| Construction | [`/implement-dsl-mcp`](skills/implement-dsl-mcp/SKILL.md)                             | Standalone MCP server application leveraging the library for AI agent integration   |
+| Construction | [`/implement-dsl-lsp`](skills/implement-dsl-lsp/SKILL.md)                             | Eclipse LSP4J language server daemon leveraging the library for IDE diagnostics     |
 | Construction | [`/implement-dsl-vscode-extension`](skills/implement-dsl-vscode-extension/SKILL.md) | VS Code extension client packaging and launching the Java LSP server                |
 
 ```text
@@ -71,7 +73,7 @@ See the marketplace [installation guides](../docs/getting-started.md) for other 
 
 ## Inputs and generated artifacts
 
-The plugin consumes the core documentation under `docs/`. It creates the DSL grammar, state machine, REST API, LSP server, and editor tooling:
+The plugin consumes the core documentation under `docs/`. It generates a modular multi-module project where the DSL core is a reusable library and the MCP/LSP/VS Code tools are downstream applications:
 
 ```text
 your-solution/
@@ -79,19 +81,19 @@ your-solution/
 │   ├── entity_model.md
 │   ├── use_cases/UC-*.md
 │   └── test_cases/TC-*.md
-├── <domain>-core/                    # /implement-dsl: grammar, FSM, and REPL
+├── <domain>-dsl/                     # /implement-dsl: Reusable Java library (JAR)
+│   ├── pom.xml                      # Standard Java library packaging (antlr4-runtime)
 │   ├── src/main/antlr4/             # ANTLR 4 Lexer and Parser grammar (.g4)
 │   └── src/main/java/.../
+│       ├── api/                     # Public DslEngine, DslSession, SessionRepository
 │       ├── fsm/                     # Java 21 sealed state machine & transition table
 │       ├── engine/                  # ANTLR visitor & command execution engine
-│       └── repl/                    # JLine interactive natural language shell
-├── <domain>-api/                     # /implement-dsl: session-aware Spring Boot JSON API
-│   └── src/main/java/.../
-│       ├── controller/              # Session-based REST endpoints
-│       └── session/                 # DslSessionRepository & session lifecycle
-├── <domain>-mcp/                     # /implement-dsl-mcp: Model Context Protocol server
-│   └── src/main/java/.../           # MCP tools, resources, prompts (stdio / SSE)
-├── <domain>-lsp/                     # /implement-dsl-lsp: Eclipse LSP4J server
+│       └── repl/                    # Interactive JLine CLI terminal runner
+├── <domain>-mcp/                     # /implement-dsl-mcp: Standalone MCP application
+│   ├── pom.xml                      # Depends on <domain>-dsl + io.modelcontextprotocol.sdk:mcp
+│   └── src/main/java/.../           # MCP tools (validate, execute), resources, prompts (stdio / SSE)
+├── <domain>-lsp/                     # /implement-dsl-lsp: Eclipse LSP4J daemon application
+│   ├── pom.xml                      # Depends on <domain>-dsl + org.eclipse.lsp4j
 │   └── src/main/java/.../           # LSP4J handlers, diagnostics, completions, hover
 └── <domain>-vscode/                  # /implement-dsl-vscode-extension: VS Code extension
     ├── package.json                 # Language contribution & extension manifest

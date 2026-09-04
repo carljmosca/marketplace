@@ -2,11 +2,10 @@
 name: implement-dsl-lsp
 description: >
   Implements a Language Server Protocol (LSP) server daemon in Java using Eclipse
-  LSP4J for a Domain-Specific Language (DSL). Connects the ANTLR 4 grammar and
-  Finite State Machine to provide real-time editor features: syntax and state-aware
-  diagnostics, context-sensitive code completions, hover documentation, and document
-  symbols over standard I/O (stdio). Use when the user asks to "implement LSP",
-  "create language server", "build DSL LSP", or mentions LSP server implementation.
+  LSP4J that wraps and leverages the reusable DSL library JAR. Connects the ANTLR 4
+  grammar and Finite State Machine to provide real-time editor features: syntax
+  and state-aware diagnostics, context-sensitive code completions, hover
+  documentation, and document symbols over standard I/O (stdio).
 ---
 
 <!--
@@ -19,8 +18,11 @@ Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE.
 
 ## Goal
 
-Implement a Language Server Protocol (LSP) server daemon for the DSL created by `/implement-dsl` in Java using
-**Eclipse LSP4J** (`org.eclipse.lsp4j`), packaged as a runnable fat JAR communicating over standard I/O (`System.in`/`System.out`).
+Implement a **Language Server Protocol (LSP) server daemon (`<domain>-lsp`)** in Java using **Eclipse LSP4J** (`org.eclipse.lsp4j`)
+that imports and leverages the reusable **`<domain>-dsl.jar`** library created by `/implement-dsl`.
+
+The resulting LSP daemon is packaged as a runnable fat JAR (`<domain>-lsp.jar`) communicating over standard I/O
+(`System.in`/`System.out`) to power rich IDE features in VS Code, Eclipse, IntelliJ, and other LSP clients.
 
 ## If an Implementation Already Exists
 
@@ -28,26 +30,33 @@ Before generating new files, check whether an LSP server module or class already
 `src/main/java/.../lsp/`):
 - If it exists, update the existing language server rather than generating parallel files.
 - Keep existing custom handlers and transport bindings intact.
-- Reconcile diagnostic listeners, completion providers, and hover providers with recent changes to the ANTLR grammar
-  or FSM state definitions.
+- Reconcile diagnostic listeners, completion providers, and hover providers with recent changes to the `<domain>-dsl` library.
 
 ## Workflow & Conventions
 
-1. **Locate DSL Core & Grammar Artifacts**:
-   - Inspect the ANTLR 4 grammar (`.g4`), generated lexer/parser, and Java 21 FSM state definitions produced by `/implement-dsl`.
-   - Identify the domain verbs, keywords, states, and transition rules.
+1. **Locate Reusable DSL Library**:
+   - Ensure `<domain>-dsl` is built and installed (`mvn clean install`).
+   - Identify AST nodes, parser rules, and FSM transition methods exposed by `<domain>-dsl`.
 
-2. **Project Setup & Dependencies**:
-   - Create or configure the LSP module (e.g. `<domain>-lsp/`) with `pom.xml`:
+2. **Project Setup & Dependencies (`<domain>-lsp/pom.xml`)**:
+   - Configure the LSP application module depending on the `<domain>-dsl` library:
      ```xml
-     <dependency>
-         <groupId>org.eclipse.lsp4j</groupId>
-         <artifactId>org.eclipse.lsp4j</artifactId>
-         <version>0.24.0</version>
-     </dependency>
+     <dependencies>
+         <!-- Reusable DSL Core Library -->
+         <dependency>
+             <groupId>${project.groupId}</groupId>
+             <artifactId><domain>-dsl</artifactId>
+             <version>${project.version}</version>
+         </dependency>
+         <!-- Eclipse LSP4J -->
+         <dependency>
+             <groupId>org.eclipse.lsp4j</groupId>
+             <artifactId>org.eclipse.lsp4j</artifactId>
+             <version>0.24.0</version>
+         </dependency>
+     </dependencies>
      ```
-   - Add the `<domain>-core` dependency containing the ANTLR parser and FSM.
-   - Configure `maven-shade-plugin` or `spring-boot-maven-plugin` to produce a runnable standalone fat JAR (`<domain>-lsp.jar`).
+   - Configure `maven-shade-plugin` to produce a runnable standalone fat JAR (`<domain>-lsp.jar`).
 
 3. **LSP Server Implementation**:
    - Implement `LanguageServer`, `TextDocumentService`, and `WorkspaceService`:
@@ -70,10 +79,10 @@ Before generating new files, check whether an LSP server module or class already
 
 4. **Real-Time Diagnostics (`publishDiagnostics`)**:
    - On `textDocument/didOpen` and `textDocument/didChange`:
-     - Tokenize and parse document using the ANTLR lexer/parser.
+     - Tokenize and parse document using the ANTLR lexer/parser from `<domain>-dsl`.
      - Report syntax errors with 0-based LSP `Position` and `Range` coordinates.
      - Perform semantic & FSM validation: walk statements in sequential order against the FSM. If a statement triggers
-       an invalid transition from the current state, publish a diagnostic with severity `DiagnosticSeverity.Error`.
+       an invalid transition from the current state or violates a business rule (`BR-*`), publish a diagnostic with severity `DiagnosticSeverity.Error`.
 
 5. **State-Aware Completions (`textDocument/completion`)**:
    - Analyze text preceding cursor position to determine expected token or statement type.
@@ -86,15 +95,14 @@ Before generating new files, check whether an LSP server module or class already
      state transition diagrams.
 
 7. **Compilation & Packaging**:
-   - Run `mvn clean package` to produce the standalone runnable JAR.
+   - Run `mvn clean package` to produce the standalone runnable fat JAR.
    - Verify that the fat JAR launches without classpath errors:
      `java -jar target/<domain>-lsp.jar` (listening on stdio).
 
 8. **Next Step Guidance**:
    - Conclude by summarizing the LSP server capabilities and guiding the user to the VS Code extension skill:
      ```text
-     The Eclipse LSP4J language server has been implemented and packaged into target/<domain>-lsp.jar.
+     The Eclipse LSP4J language server daemon has been packaged into target/<domain>-lsp.jar.
      To package and launch this LSP server within Visual Studio Code, run:
        /implement-dsl-vscode-extension
      ```
-

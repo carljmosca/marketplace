@@ -1,13 +1,13 @@
 ---
 name: implement-dsl-mcp
 description: >
-  Implements a Model Context Protocol (MCP) server in Java for a Domain-Specific
-  Language (DSL). Connects the ANTLR 4 grammar, AST execution engine, and Java 21
-  Finite State Machine to expose MCP tools (validate_dsl, execute_dsl,
-  get_available_transitions), MCP resources (dsl://grammar, dsl://fsm/states,
-  dsl://examples), and MCP prompts to AI agents (Claude Code, Cursor, Copilot,
-  Gemini) and AIUP workflows. Use when the user asks to "implement MCP server",
-  "create DSL MCP", "build MCP tools for DSL", or mentions Model Context Protocol.
+  Implements a Model Context Protocol (MCP) server application in Java that
+  wraps and leverages the reusable DSL library JAR. Connects the DslEngine,
+  grammar, and Finite State Machine to expose MCP tools (validate_dsl,
+  execute_dsl, get_available_transitions), MCP resources (dsl://grammar,
+  dsl://fsm/states, dsl://examples), and MCP prompts. Allows AI agents (Claude
+  Code, Cursor, Copilot, Gemini) and AIUP workflows to build applications that
+  consume the DSL.
 ---
 
 <!--
@@ -20,12 +20,13 @@ Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE.
 
 ## Goal
 
-Implement a Model Context Protocol (MCP) server for the Domain-Specific Language created by `/implement-dsl` in Java,
-packaged as a runnable fat JAR supporting standard I/O (`stdio`) and/or HTTP/SSE transport.
+Implement a **Model Context Protocol (MCP) server application (`<domain>-mcp`)** in Java that imports and leverages the
+reusable **`<domain>-dsl.jar`** library created by `/implement-dsl`.
 
-The resulting MCP server enables AI agents (Claude Code, Cursor, Gemini, Copilot, Antigravity) and downstream AIUP
-construction skills to discover grammar rules, validate scripts, execute commands, inspect lifecycle state machines, and
-generate compliant domain scripts.
+The resulting MCP server application is packaged as a runnable fat JAR (supporting `stdio` and HTTP/SSE) that acts for the
+DSL in the exact same manner that the Vaadin MCP server acts for Vaadin — enabling AI agents (Claude Code, Cursor, Gemini,
+Copilot, Antigravity) and downstream AIUP construction skills to discover grammar rules, validate scripts, execute commands,
+inspect lifecycle state machines, and implement applications that leverage the DSL.
 
 ## If an Implementation Already Exists
 
@@ -33,24 +34,25 @@ Before generating new files, check whether an MCP server module or class already
 `src/main/java/.../mcp/`):
 - If it exists, update the existing MCP server rather than generating parallel files.
 - Keep existing tool signatures, resource URIs, and custom prompt templates intact.
-- Reconcile validation logic, grammar resources, and state transition tools with recent changes to the ANTLR grammar
-  or FSM state definitions.
+- Reconcile validation logic, grammar resources, and state transition tools with recent changes to the `<domain>-dsl` library.
 
 ## Workflow & Conventions
 
-1. **Locate DSL Core & Grammar Artifacts**:
-   - Inspect the ANTLR 4 grammar (`.g4`), AST visitor, and Java 21 FSM state definitions produced by `/implement-dsl`.
-   - Identify domain verbs, keywords, state transitions, business rules (`BR-*`), and use case specifications (`UC-*.md`).
+1. **Locate Reusable DSL Library**:
+   - Ensure the `<domain>-dsl` library has been compiled and installed (`mvn clean install`).
+   - Identify the public Java APIs exposed by `<domain>-dsl`: `DslEngine`, `DslSessionRepository`, `DslParser`, `FsmDefinition`.
 
-2. **Project Setup & Dependencies (`<domain>-mcp/`)**:
-   - Create or configure the MCP module with `pom.xml`:
+2. **Project Setup & Dependencies (`<domain>-mcp/pom.xml`)**:
+   - Create or configure the MCP application module depending on the `<domain>-dsl` library:
      ```xml
      <dependencies>
+         <!-- Reusable DSL Core Library -->
          <dependency>
              <groupId>${project.groupId}</groupId>
-             <artifactId><domain>-core</artifactId>
+             <artifactId><domain>-dsl</artifactId>
              <version>${project.version}</version>
          </dependency>
+         <!-- MCP Server SDK -->
          <dependency>
              <groupId>io.modelcontextprotocol.sdk</groupId>
              <artifactId>mcp-core</artifactId>
@@ -60,18 +62,17 @@ Before generating new files, check whether an MCP server module or class already
      ```
    - Configure `maven-shade-plugin` or `spring-boot-maven-plugin` to package a runnable standalone fat JAR (`<domain>-mcp.jar`).
 
-3. **Implement MCP Tools**:
+3. **Implement MCP Tools (calling `DslEngine`)**:
    - `validate_dsl(script: string)`:
-     - Parses the provided DSL script using the ANTLR lexer/parser.
-     - Performs semantic validation by walking statements against the Java 21 FSM transition table.
+     - Delegates to `dslEngine.validate(script)`.
      - Returns `{ "valid": boolean, "errors": [ { "line": int, "column": int, "message": string } ] }`.
    - `execute_dsl(sessionId?: string, command: string)`:
-     - Evaluates a DSL command against an existing session or an ephemeral sandbox session.
-     - Advances the FSM and returns `{ "status": "SUCCESS"|"FAILURE", "currentState": string, "availableTransitions": string[], "message": string }`.
+     - Delegates to `dslEngine.executeInSession(sessionId, command)` or `dslEngine.execute(command)`.
+     - Advances the FSM and returns `{ "status": "SUCCESS"|"FAILURE", "currentState": string, "availableTransitions": string[], "message": string, "data": { ... } }`.
    - `get_available_transitions(sessionId?: string, currentState?: string)`:
-     - Returns the list of valid next actions/commands given the current lifecycle state.
+     - Queries valid next actions and allowed transitions from the active state machine.
    - `explain_verb(verb: string)`:
-     - Returns usage documentation, syntax examples, and business rules associated with a domain command.
+     - Returns usage documentation, syntax examples, parameters, and business rules (`BR-*`) for a domain command.
 
 4. **Implement MCP Resources**:
    - Expose grammar and state machine metadata for agent context enrichment:
@@ -90,6 +91,8 @@ Before generating new files, check whether an MCP server module or class already
      ```java
      public class DslMcpServerApplication {
          public static void main(String[] args) {
+             DslEngine dslEngine = new DslEngine(new InMemoryDslSessionRepository());
+             
              McpSyncServer syncServer = McpServer.sync(new StdioServerTransport())
                  .serverInfo("<domain>-dsl-mcp", "1.0.0")
                  .capabilities(ServerCapabilities.builder()
@@ -99,7 +102,7 @@ Before generating new files, check whether an MCP server module or class already
                      .build())
                  .build();
 
-             registerTools(syncServer);
+             registerTools(syncServer, dslEngine);
              registerResources(syncServer);
              registerPrompts(syncServer);
 
@@ -111,17 +114,17 @@ Before generating new files, check whether an MCP server module or class already
    - Consult [references/mcp-architecture.md](references/mcp-architecture.md) for detailed implementation patterns.
 
 7. **Compilation & Verification**:
-   - Build the module:
+   - Build the MCP server fat JAR:
      ```sh
      mvn clean package
      ```
-   - Verify tool execution using the MCP Inspector or direct execution:
+   - Verify tool execution using the MCP Inspector:
      ```sh
      npx @modelcontextprotocol/inspector java -jar target/<domain>-mcp.jar
      ```
 
 8. **Next Step Guidance**:
-   - Provide the configuration snippet for adding the server to the user's project `.mcp.json` or `claude.json`:
+   - Provide the configuration snippet for adding the server to `.mcp.json` or `claude.json`:
      ```json
      {
        "mcpServers": {
@@ -133,12 +136,11 @@ Before generating new files, check whether an MCP server module or class already
        }
      }
      ```
-   - Guide the user to related skills:
+   - Guide the user to the language server daemon:
      ```text
-     The DSL MCP server has been built and packaged into target/<domain>-mcp.jar.
-     To implement the Eclipse LSP4J language server daemon, run:
+     The DSL MCP server application has been built and packaged into target/<domain>-mcp.jar.
+     To implement the Eclipse LSP4J language server daemon leveraging the DSL library, run:
        /implement-dsl-lsp
      To package the VS Code extension, run:
        /implement-dsl-vscode-extension
      ```
-

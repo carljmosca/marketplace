@@ -225,9 +225,9 @@ a project so commands shared by several stack plugins do not collide.
 
 | Phase        | Skill (slash command)                 | Description                                                                              |
 |--------------|---------------------------------------|------------------------------------------------------------------------------------------|
-| Construction | `/implement-dsl`                      | Implement ANTLR grammar, Java 21 FSM, evaluation engine, REPL, and session JSON REST API |
-| Construction | `/implement-dsl-mcp`                  | Implement Model Context Protocol (MCP) server exposing tools, resources, and prompts     |
-| Construction | `/implement-dsl-lsp`                  | Implement Eclipse LSP4J Language Server Protocol daemon with ANTLR and FSM diagnostics   |
+| Construction | `/implement-dsl`                      | Implement reusable Java DSL library JAR with ANTLR grammar, Java 21 FSM, and Java API    |
+| Construction | `/implement-dsl-mcp`                  | Implement Model Context Protocol (MCP) application wrapping the DSL library for AI agents|
+| Construction | `/implement-dsl-lsp`                  | Implement Eclipse LSP4J daemon application wrapping the DSL library for editor tooling   |
 | Construction | `/implement-dsl-vscode-extension`     | Implement VS Code extension packaging and launching the Java LSP server over stdio      |
 
 ## Copyright and attribution

@@ -4,89 +4,79 @@ Part of the AI Unified Process — https://unifiedprocess.ai
 Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE.
 -->
 
-# Session-Aware DSL REST API Specification
+# Programmatic Session & Library API Specification
 
-This reference defines the HTTP/JSON API contract for executing DSL commands across stateful sessions.
+This reference defines the Java library API contract and optional HTTP/JSON REST contracts for executing DSL commands across stateful sessions.
 
-## Endpoints
+## 1. Reusable Java Library API (`DslEngine`)
 
-### 1. Create Session
-- **`POST /api/dsl/sessions`**
-- **Request Body**: Optional configuration or metadata:
-  ```json
-  {
-    "userId": "user-42"
-  }
-  ```
-- **Response**: `201 Created`
-  ```json
-  {
-    "sessionId": "4a7b9c21-1234-5678-abcd-ef0123456789",
-    "status": "SUCCESS",
-    "currentState": "INITIAL",
-    "message": "Session initialized",
-    "availableTransitions": ["CREATE_ORDER"],
-    "createdAt": "2026-09-02T12:00:00Z"
-  }
-  ```
+The core library (`<domain>-dsl.jar`) provides a clean, thread-safe facade for executing and validating DSL scripts in host applications:
 
-### 2. Execute Command in Session
-- **`POST /api/dsl/sessions/{sessionId}/execute`**
-- **Request Body**:
-  ```json
-  {
-    "command": "add item \"Widget\" quantity 2 at price 19.99"
-  }
-  ```
-- **Response**: `200 OK` (on success) or `422 Unprocessable Entity` (on validation/state error)
-  ```json
-  {
-    "sessionId": "4a7b9c21-1234-5678-abcd-ef0123456789",
-    "status": "SUCCESS",
-    "currentState": "DRAFT",
-    "message": "Item added",
-    "data": {
-      "orderId": "ord-101",
-      "itemCount": 1,
-      "total": 39.98
-    },
-    "availableTransitions": ["ADD_ITEM", "SUBMIT_ORDER", "CANCEL_ORDER"],
-    "errors": []
-  }
-  ```
-- **Error Response Example**:
-  ```json
-  {
-    "sessionId": "4a7b9c21-1234-5678-abcd-ef0123456789",
-    "status": "ERROR",
-    "currentState": "APPROVED",
-    "message": "Invalid transition",
-    "availableTransitions": [],
-    "errors": [
-      "Cannot execute 'add item' in terminal state APPROVED"
-    ]
-  }
-  ```
+```java
+public class DslEngine {
+    private final DslSessionRepository sessionRepository;
+    private final FsmDefinition fsmDefinition;
 
-### 3. Get Session State
-- **`GET /api/dsl/sessions/{sessionId}`**
-- **Response**: `200 OK`
-  ```json
-  {
-    "sessionId": "4a7b9c21-1234-5678-abcd-ef0123456789",
-    "currentState": "DRAFT",
-    "availableTransitions": ["ADD_ITEM", "SUBMIT_ORDER", "CANCEL_ORDER"],
-    "data": { ... }
-  }
-  ```
+    public DslEngine(DslSessionRepository sessionRepository) {
+        this.sessionRepository = sessionRepository;
+        this.fsmDefinition = new FsmDefinition();
+    }
 
-### 4. Close Session
-- **`DELETE /api/dsl/sessions/{sessionId}`**
-- **Response**: `204 No Content`
+    /**
+     * Validates a complete script for ANTLR syntax errors and FSM semantic transition violations.
+     */
+    public ValidationResult validate(String script) { ... }
 
-## Session Storage Implementation
+    /**
+     * Executes a complete script in a temporary isolated session.
+     */
+    public EvaluationResult execute(String script) { ... }
 
-Provide a clean `DslSessionRepository` interface:
+    /**
+     * Creates a new stateful session.
+     */
+    public DslSession createSession() { ... }
+
+    /**
+     * Executes a single command in an active session and advances the state machine.
+     */
+    public EvaluationResult executeInSession(UUID sessionId, String command) { ... }
+
+    /**
+     * Returns valid next actions/commands from the current state in the session.
+     */
+    public List<String> getAvailableTransitions(UUID sessionId) { ... }
+}
+```
+
+### Result Types
+
+```java
+public record ValidationResult(
+    boolean valid,
+    String message,
+    List<SyntaxError> errors
+) {}
+
+public record SyntaxError(
+    int line,
+    int column,
+    String errorType,
+    String message
+) {}
+
+public record EvaluationResult(
+    UUID sessionId,
+    String status,              // "SUCCESS" | "FAILURE"
+    String currentState,
+    String message,
+    Map<String, Object> data,
+    List<String> availableTransitions,
+    List<String> errors
+) {}
+```
+
+## 2. Session Storage & Lifecycle (`DslSessionRepository`)
 
 ```java
 public interface DslSessionRepository {
@@ -97,5 +87,49 @@ public interface DslSessionRepository {
 }
 ```
 
-With an in-memory implementation (`InMemoryDslSessionRepository`) using `ConcurrentHashMap<UUID, DslSession>` and a scheduled cleanup task removing sessions idle for longer than the configured timeout (default: 30 minutes).
+Default in-memory implementation (`InMemoryDslSessionRepository`) uses a `ConcurrentHashMap<UUID, DslSession>` with optional sliding expiration eviction for inactive sessions.
 
+## 3. Optional HTTP / JSON REST API Endpoints
+
+When hosting the DSL as a web service or Spring Boot microservice, map endpoints directly to `DslEngine`:
+
+### Create Session
+- **`POST /api/dsl/sessions`**
+- **Response**: `201 Created`
+  ```json
+  {
+    "sessionId": "4a7b9c21-1234-5678-abcd-ef0123456789",
+    "status": "SUCCESS",
+    "currentState": "INITIAL",
+    "message": "Session initialized",
+    "availableTransitions": ["CREATE_ACCOUNT", "OPEN_TRANSACTION"],
+    "createdAt": "2026-09-04T12:00:00Z"
+  }
+  ```
+
+### Execute Command in Session
+- **`POST /api/dsl/sessions/{sessionId}/execute`**
+- **Request Body**:
+  ```json
+  {
+    "command": "debit 150.00 USD to \"1010\""
+  }
+  ```
+- **Response**: `200 OK` (or `422 Unprocessable Entity`)
+  ```json
+  {
+    "sessionId": "4a7b9c21-1234-5678-abcd-ef0123456789",
+    "status": "SUCCESS",
+    "currentState": "DRAFT",
+    "message": "Debit posting recorded",
+    "data": { "totalDebits": 150.00, "totalCredits": 0.00 },
+    "availableTransitions": ["DEBIT", "CREDIT", "POST", "CANCEL"],
+    "errors": []
+  }
+  ```
+
+### Get Session State
+- **`GET /api/dsl/sessions/{sessionId}`**
+
+### Close Session
+- **`DELETE /api/dsl/sessions/{sessionId}`**
