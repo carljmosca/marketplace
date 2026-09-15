@@ -88,6 +88,7 @@ marketplace/
 │   ├── mcp.json                  # Agent Plugins MCP config
 │   └── skills/                   # All workflow steps as skills (slash commands)
 │       ├── implement-dsl/
+│       ├── implement-dsl-api/
 │       ├── implement-dsl-mcp/
 │       ├── implement-dsl-lsp/
 │       └── implement-dsl-vscode-extension/
@@ -226,6 +227,7 @@ a project so commands shared by several stack plugins do not collide.
 | Phase        | Skill (slash command)                 | Description                                                                              |
 |--------------|---------------------------------------|------------------------------------------------------------------------------------------|
 | Construction | `/implement-dsl`                      | Implement reusable Java DSL library JAR with ANTLR grammar, Java 21 FSM, and Java API    |
+| Construction | `/implement-dsl-api`                  | Implement Spring Boot JSON REST API application exposing DSL sessions over HTTP          |
 | Construction | `/implement-dsl-mcp`                  | Implement Model Context Protocol (MCP) application wrapping the DSL library for AI agents|
 | Construction | `/implement-dsl-lsp`                  | Implement Eclipse LSP4J daemon application wrapping the DSL library for editor tooling   |
 | Construction | `/implement-dsl-vscode-extension`     | Implement VS Code extension packaging and launching the Java LSP server over stdio      |

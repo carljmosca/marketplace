@@ -59,7 +59,12 @@ stack.
 | [`aiup-angular-jpa`](aiup-angular-jpa/)     | Angular with Spring Boot and JPA              | Flyway, implementation, Spring Boot tests, Vitest, Playwright                                              |
 | [`aiup-blazor-dotnet`](aiup-blazor-dotnet/) | C# and Blazor on .NET 10 with EF Core         | EF migrations, Vertical Slices, bUnit, xUnit, Playwright                                                   |
 | [`aiup-nestjs-nextjs`](aiup-nestjs-nextjs/) | NestJS and Drizzle with Next.js App Router    | Drizzle migrations, implementation, Vitest, Supertest, React Testing Library, Playwright                   |
-| [`aiup-dsl`](aiup-dsl/)                     | Java 21 DSL with ANTLR 4 and Finite State Machines | `/implement-dsl`, `/implement-dsl-mcp`, `/implement-dsl-lsp`, `/implement-dsl-vscode-extension` |
+| [`aiup-dsl`](aiup-dsl/)                     | Java 21 DSL with ANTLR 4 and Finite State Machines | `/implement-dsl`, `/implement-dsl-api`, `/implement-dsl-mcp`, `/implement-dsl-lsp`, `/implement-dsl-vscode-extension` |
+
+`aiup-dsl` is a specialized language engineering plugin used to build a reusable Domain-Specific Language library JAR
+and companion Model Context Protocol (MCP) server. Applications that leverage the DSL are then built in their own projects
+using `aiup-core` and standard stack plugins (such as `aiup-vaadin-jooq` or `aiup-angular-jpa`), where their AI coding
+agents query the DSL's MCP server during `/implement` to author and validate DSL scripts and integration code.
 
 `aiup-vaadin-jooq` additionally ships the read-only [`uc-coverage`](aiup-vaadin-jooq/agents/uc-coverage.md)
 sub-agent. It reports which parts of the specification have no code or no test behind them, and which code has no
