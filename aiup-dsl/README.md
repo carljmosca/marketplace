@@ -58,17 +58,26 @@ A DSL is appropriate when:
 
 ---
 
-## Modularity: Selectable Skills
+## Core Deliverables vs. Optional Tooling
 
-To avoid forced dependencies and monolithic delivery, `aiup-dsl` structures all components as **independent, selectable skills**. You only generate the modules your solution needs:
+A complete AIUP DSL platform consists of two **core deliverables** required for AI-driven application development, along with three **optional tooling** modules built only when specifically needed:
 
-| Phase        | Skill                                                                                 | Responsibility                                                                       |
-|--------------|---------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| Construction | [`/implement-dsl`](skills/implement-dsl/SKILL.md)                                     | **Core Reusable Library (`<domain>-dsl.jar`)**: ANTLR 4 grammar, Java 21 FSM, `DslEngine` Java API, JLine REPL |
-| Construction | [`/implement-dsl-api`](skills/implement-dsl-api/SKILL.md)                             | **Optional REST API (`<domain>-api`)**: Spring Boot JSON REST endpoints for HTTP clients |
-| Construction | [`/implement-dsl-mcp`](skills/implement-dsl-mcp/SKILL.md)                             | **Optional MCP Server (`<domain>-mcp`)**: Model Context Protocol server for AI coding agents |
-| Construction | [`/implement-dsl-lsp`](skills/implement-dsl-lsp/SKILL.md)                             | **Optional LSP Server (`<domain>-lsp`)**: Eclipse LSP4J language server daemon for IDEs |
-| Construction | [`/implement-dsl-vscode-extension`](skills/implement-dsl-vscode-extension/SKILL.md) | **Optional VS Code Extension (`<domain>-vscode`)**: TextMate syntax and LSP client launcher |
+### Core Deliverables (Required for AIUP)
+These two modules form the foundational platform. The library runs the DSL, and the MCP server empowers AIUP coding agents to build downstream applications that consume it:
+
+| Phase | Skill | Responsibility |
+|---|---|---|
+| Construction | [`/implement-dsl`](skills/implement-dsl/SKILL.md) | **Core Reusable Library (`<domain>-dsl.jar`)**: ANTLR 4 grammar, Java 21 sealed FSM, `DslEngine` Java API, JLine REPL. Enables applications to execute the DSL. |
+| Construction | [`/implement-dsl-mcp`](skills/implement-dsl-mcp/SKILL.md) | **Core MCP Server Application (`<domain>-mcp`)**: Model Context Protocol server exposing `validate_dsl`, `get_available_transitions`, and grammar resources. Enables AIUP agents to implement applications using the DSL. |
+
+### Optional Integration & Tooling
+Built only when external HTTP access or human developer IDE tooling is required:
+
+| Phase | Skill | Responsibility |
+|---|---|---|
+| Construction | [`/implement-dsl-api`](skills/implement-dsl-api/SKILL.md) | **Optional REST API (`<domain>-api`)**: Spring Boot JSON REST endpoints for external HTTP/web clients. |
+| Construction | [`/implement-dsl-lsp`](skills/implement-dsl-lsp/SKILL.md) | **Optional LSP Daemon (`<domain>-lsp`)**: Eclipse LSP4J server providing real-time diagnostics and autocomplete for IDEs. |
+| Construction | [`/implement-dsl-vscode-extension`](skills/implement-dsl-vscode-extension/SKILL.md) | **Optional VS Code Extension (`<domain>-vscode`)**: TextMate syntax grammar and launcher for Visual Studio Code. |
 
 ---
 

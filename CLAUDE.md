@@ -224,13 +224,15 @@ a project so commands shared by several stack plugins do not collide.
 
 ### Java DSL / ANTLR / FSM (stack-specific)
 
+Core deliverables (required for AIUP application implementation) and optional integration/editor tooling:
+
 | Phase        | Skill (slash command)                 | Description                                                                              |
 |--------------|---------------------------------------|------------------------------------------------------------------------------------------|
-| Construction | `/implement-dsl`                      | Implement reusable Java DSL library JAR with ANTLR grammar, Java 21 FSM, and Java API    |
-| Construction | `/implement-dsl-api`                  | Implement Spring Boot JSON REST API application exposing DSL sessions over HTTP          |
-| Construction | `/implement-dsl-mcp`                  | Implement Model Context Protocol (MCP) application wrapping the DSL library for AI agents|
-| Construction | `/implement-dsl-lsp`                  | Implement Eclipse LSP4J daemon application wrapping the DSL library for editor tooling   |
-| Construction | `/implement-dsl-vscode-extension`     | Implement VS Code extension packaging and launching the Java LSP server over stdio      |
+| Construction | `/implement-dsl`                      | Core: Implement reusable Java DSL library JAR with ANTLR grammar, Java 21 FSM, Java API  |
+| Construction | `/implement-dsl-mcp`                  | Core: Implement MCP server application enabling AIUP agents to build DSL applications    |
+| Construction | `/implement-dsl-api`                  | Optional: Implement Spring Boot REST API exposing DSL sessions over HTTP/JSON            |
+| Construction | `/implement-dsl-lsp`                  | Optional: Implement Eclipse LSP4J daemon for IDE diagnostics and autocomplete            |
+| Construction | `/implement-dsl-vscode-extension`     | Optional: Implement VS Code extension packaging TextMate grammar and launching LSP       |
 
 ## Copyright and attribution
 
