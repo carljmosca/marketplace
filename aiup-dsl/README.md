@@ -70,14 +70,14 @@ These two modules form the foundational platform. The library runs the DSL, and 
 | Construction | [`/implement-dsl`](skills/implement-dsl/SKILL.md) | **Core Reusable Library (`<domain>-dsl.jar`)**: ANTLR 4 grammar, Java 21 sealed FSM, `DslEngine` Java API, JLine REPL. Enables applications to execute the DSL. |
 | Construction | [`/implement-dsl-mcp`](skills/implement-dsl-mcp/SKILL.md) | **Core MCP Server Application (`<domain>-mcp`)**: Model Context Protocol server exposing `validate_dsl`, `get_available_transitions`, and grammar resources. Enables AIUP agents to implement applications using the DSL. |
 
-### Optional Integration & Tooling
-Built only when external HTTP access or human developer IDE tooling is required:
+### Optional Tooling & UI/UX Extensions
+Built when external HTTP access, desktop IDE extensions, or in-app browser script editors are required:
 
 | Phase | Skill | Responsibility |
 |---|---|---|
-| Construction | [`/implement-dsl-api`](skills/implement-dsl-api/SKILL.md) | **Optional REST API (`<domain>-api`)**: Spring Boot JSON REST endpoints for external HTTP/web clients. |
-| Construction | [`/implement-dsl-lsp`](skills/implement-dsl-lsp/SKILL.md) | **Optional LSP Daemon (`<domain>-lsp`)**: Eclipse LSP4J server providing real-time diagnostics and autocomplete for IDEs. |
-| Construction | [`/implement-dsl-vscode-extension`](skills/implement-dsl-vscode-extension/SKILL.md) | **Optional VS Code Extension (`<domain>-vscode`)**: TextMate syntax grammar and launcher for Visual Studio Code. |
+| Construction | [`/implement-dsl-lsp`](skills/implement-dsl-lsp/SKILL.md) | **Language Server Protocol Daemon (`<domain>-lsp`)**: Eclipse LSP4J server providing real-time diagnostics, completions, and hovers. **Powers both desktop IDEs and in-app web script editors (e.g. Monaco Editor in Vaadin/Angular/React over WebSocket)**. |
+| Construction | [`/implement-dsl-vscode-extension`](skills/implement-dsl-vscode-extension/SKILL.md) | **VS Code Desktop Extension (`<domain>-vscode`)**: TextMate syntax grammar and launcher for desktop Visual Studio Code. |
+| Construction | [`/implement-dsl-api`](skills/implement-dsl-api/SKILL.md) | **REST API (`<domain>-api`)**: Spring Boot JSON REST endpoints for external HTTP/web microservices. |
 
 ---
 
@@ -145,6 +145,12 @@ When a developer builds an application that leverages the DSL (e.g., a banking w
    When the developer runs `/implement UC-XXX` in the application project:
    - The AI agent queries the DSL MCP server (`dsl://grammar`, `dsl://fsm/states`) to understand domain syntax and state rules.
    - The AI agent uses the `validate_dsl` tool to ensure any generated DSL scripts or business logic are guaranteed correct before writing application code.
+
+4. **Interactive In-App UI/UX (Live In-Browser Script Editor via LSP)**:
+   If the application features a DSL-aware interactive UI screen (such as an embedded script console, rule-authoring screen, or configuration pane in Vaadin, Angular, or React):
+   - The web frontend embeds **Monaco Editor** (the web engine behind VS Code).
+   - The application backend proxies WebSocket traffic to the **`<domain>-lsp.jar`** daemon.
+   - Users get full IDE-grade editing directly in the browser: live syntax error squiggles, parameter hovers, and state-aware autocompletion without client-side parsing overhead!
 
 ---
 

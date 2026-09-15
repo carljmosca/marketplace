@@ -231,7 +231,7 @@ Core deliverables (required for AIUP application implementation) and optional in
 | Construction | `/implement-dsl`                      | Core: Implement reusable Java DSL library JAR with ANTLR grammar, Java 21 FSM, Java API  |
 | Construction | `/implement-dsl-mcp`                  | Core: Implement MCP server application enabling AIUP agents to build DSL applications    |
 | Construction | `/implement-dsl-api`                  | Optional: Implement Spring Boot REST API exposing DSL sessions over HTTP/JSON            |
-| Construction | `/implement-dsl-lsp`                  | Optional: Implement Eclipse LSP4J daemon for IDE diagnostics and autocomplete            |
+| Construction | `/implement-dsl-lsp`                  | Optional: Implement Eclipse LSP4J daemon for IDEs and in-app web editors (Monaco)        |
 | Construction | `/implement-dsl-vscode-extension`     | Optional: Implement VS Code extension packaging TextMate grammar and launching LSP       |
 
 ## Copyright and attribution

@@ -22,7 +22,9 @@ Implement a **Language Server Protocol (LSP) server daemon (`<domain>-lsp`)** in
 that imports and leverages the reusable **`<domain>-dsl.jar`** library created by `/implement-dsl`.
 
 The resulting LSP daemon is packaged as a runnable fat JAR (`<domain>-lsp.jar`) communicating over standard I/O
-(`System.in`/`System.out`) to power rich IDE features in VS Code, Eclipse, IntelliJ, and other LSP clients.
+(`System.in`/`System.out`) or WebSocket to power rich language features in:
+1. **Desktop IDEs** (VS Code, Eclipse, IntelliJ).
+2. **In-app web browser script editors** (e.g., Monaco Editor embedded in Vaadin, Angular, or React web applications).
 
 ## If an Implementation Already Exists
 
