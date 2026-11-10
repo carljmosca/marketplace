@@ -22,14 +22,20 @@ use it alongside `aiup-core` and select one stack plugin.
 | Construction | [`/bunit-test`](skills/bunit-test/SKILL.md)           | Browserless component tests for `.razor` pages             |
 | Construction | [`/dotnet-test`](skills/dotnet-test/SKILL.md)         | Backend unit and relational integration tests              |
 | Construction | [`/playwright-test`](skills/playwright-test/SKILL.md) | Native C# browser tests for `UC-*` or `TC-*` journeys      |
+| Construction | [`/coverage-check`](skills/coverage-check/SKILL.md)   | Read-only coverage matrix of a `UC-*` or `TC-*`            |
 
 ```text
 Construction
 ─────────────────────────────────────────────────
-/ef-migration  →  /implement  →  /bunit-test
-                              ↘  /dotnet-test
-                              ↘  /playwright-test
+/ef-migration  →  /implement  →  /dotnet-test  →  /bunit-test  →  /coverage-check
+                                                ↘  /playwright-test  ↗
 ```
+
+`/implement` and the test skills never audit their own work: each ends with a hand-off line, and the one audit of
+the round is `/coverage-check UC-XXX`. It delegates to the read-only `uc-coverage` sub-agent of this plugin
+([`agents/uc-coverage.md`](agents/uc-coverage.md)), which maps every step, alternative flow, business rule,
+precondition, and postcondition of the specification onto code and tests by `file:line`, reports gaps and drift, and
+suggests the next `**Status:**` value. Hosts without sub-agents follow the agent file directly.
 
 The linked `SKILL.md` files are the authoritative reference for detailed inputs, outputs, and behavior.
 
@@ -66,10 +72,10 @@ See the marketplace [installation guides](../docs/installation/) for other agent
 
 ## Prerequisites
 
-- `aiup-core` and reviewed `docs/entity_model.md` plus `docs/use_cases/UC-*.md` artifacts.
+- `aiup-core` 3.12.0 or later and reviewed `docs/entity_model.md` plus `docs/use_cases/UC-*.md` artifacts.
 - A .NET 10 solution or project using Blazor and Entity Framework Core.
 - A configured relational database provider and EF Core tooling for migrations.
-- Node.js and installed Playwright browsers when browser tests are generated.
+- Playwright browsers, installed with the Playwright .NET tooling (`playwright.ps1 install`), when browser tests are generated.
 - Optional MCP servers configured through [`rules/mcp-servers.md`](rules/mcp-servers.md).
 
 ## Inputs and generated artifacts
@@ -87,6 +93,7 @@ your-solution/
 │   ├── use_cases/UC-*.md
 │   └── test_cases/TC-*.md
 ├── <Application>/
+│   ├── Domain/                          # /ef-migration — entity classes
 │   ├── Data/                            # DbContext and EF configurations
 │   ├── Migrations/                      # /ef-migration
 │   └── Features/

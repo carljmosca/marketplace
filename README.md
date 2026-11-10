@@ -121,9 +121,9 @@ The coverage audit belongs to `aiup-core`: `/use-case-coverage` and `/test-case-
 [`uc-coverage-layered`](aiup-core/agents/uc-coverage-layered.md) sub-agent on demand. It reports which parts of the
 specification have no code or no test behind them, and which code has no specification behind it, and judges
 implementation and tests together; `/use-case-test` and `/test-case-implement` end by handing off to it rather than
-running it themselves, so a construction round stays fast. Of the combined stack plugins, the deprecated
-`aiup-vaadin-jooq` and `aiup-angular-jpa` have their own `/coverage-check`; `aiup-blazor-dotnet` and the deprecated
-`aiup-nestjs-nextjs` have no audit.
+running it themselves, so a construction round stays fast. Of the combined stack plugins, `aiup-blazor-dotnet` and the
+deprecated `aiup-vaadin-jooq` and `aiup-angular-jpa` have their own `/coverage-check`; the deprecated
+`aiup-nestjs-nextjs` has no audit.
 
 `aiup-vaadin-jooq`, `aiup-angular-jpa`, and `aiup-nestjs-nextjs` are deprecated in favour of the layer plugins and
 will be removed with `aiup-core` 4.0.0. The [migration guide](docs/migration.md) walks an existing project through the switch.

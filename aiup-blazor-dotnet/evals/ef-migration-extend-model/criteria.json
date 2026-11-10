@@ -1,5 +1,5 @@
 {
-  "context": "Tests whether the agent extends an EF Core model from docs/entity_model.md the way the ef-migration skill prescribes: modern NRT-safe entity classes, Fluent API mappings via IEntityTypeConfiguration<T> (including decimal precision, enum-to-string conversion, and unique indexes), and a dotnet ef migrations add command following the UCXXX_Description naming convention.",
+  "context": "Tests whether the agent extends an EF Core model from docs/entity_model.md the way the ef-migration skill prescribes: modern NRT-safe entity classes, Fluent API mappings via IEntityTypeConfiguration<T> (including decimal precision, enum-to-string conversion, and a named unique index), and a dotnet ef migrations add command whose migration name describes the tables it changes, not the use case. The agent's messages to the user are in session-log.md, the log the task asks for: judge the migration command from it. session-log.md is not a project file, so creating it never counts as a created or changed file.",
   "type": "weighted_checklist",
   "checklist": [
     {
@@ -33,8 +33,8 @@
       "max_score": 10
     },
     {
-      "name": "UC-prefixed migration command",
-      "description": "The response states the exact CLI command dotnet ef migrations add UC020_<Description> (a UCXXX_Description-style migration name tied to UC-020), rather than a generic name like AddCustomerAndOrder or InitialCreate",
+      "name": "Migration named after its tables",
+      "description": "The response states the exact CLI command dotnet ef migrations add <Name>, where the name describes the tables and the change (for example CreateCustomerAndOrder), not the use case — no UC020_ prefix, and not a generic name like InitialCreate or Migration1",
       "max_score": 10
     },
     {

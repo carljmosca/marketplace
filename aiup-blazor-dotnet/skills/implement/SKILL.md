@@ -171,6 +171,28 @@ a validation rule, a term that neither the entity model nor the glossary defines
    - Check that every business rule of the use case has its `UC-XXX BR-YYY` marker — see
      [Business Rule Markers](#business-rule-markers). Add a missing one together with the code that enforces the rule, then build again.
 
-8. **Next Step Guidance**:
-   - Conclude your response by summarizing the implemented feature files and guiding the user to the testing phase:
-   > "Next step: Run `/bunit-test` to write component UI tests, or `/dotnet-test` to write backend integration tests, followed by `/playwright-test` to generate end-to-end browser tests."
+8. **Report and hand off** — see [Coverage Check](#coverage-check) below.
+
+## Coverage Check
+
+Do **not** run the `uc-coverage` sub-agent from this skill, and do not audit the use case against
+its specification yourself. The audit is a separate, explicit step that belongs to
+`/coverage-check`: it judges implementation and tests together in
+one matrix, and it is the only audit behind a justified `**Status:**` change.
+
+Finish instead by:
+
+- Summarising what you implemented, listing the files you created or changed.
+- Ending with one hand-off line to the next construction step, the tests:
+  `Next: /dotnet-test UC-XXX`, then `/bunit-test UC-XXX` for the page;
+  `/playwright-test UC-XXX` may follow for browser tests. The test skills in turn hand off to
+  `/coverage-check UC-XXX`, the one audit of the round.
+- Only when the user explicitly wants an audit before any tests exist, point to
+  `/coverage-check UC-XXX implementation` — or `/coverage-check UC-XXX implementation wip` for a
+  large use case that is still mid-way, so the audit lists remaining work instead of defects.
+- Leaving the specification's `**Status:**` line alone; the audit suggests the next value.
+
+Running the audit here would triple it — once after implementation, once after tests, once in
+`/coverage-check`. Each run re-reads the specification and the code base and takes minutes; one
+run at the end, in `both` mode, is the one that counts. Whether to run it now, later, or not at
+all is the user's call.
