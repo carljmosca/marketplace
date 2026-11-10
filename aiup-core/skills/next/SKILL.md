@@ -131,7 +131,9 @@ first, so work that has started is finished before new work begins.
 | Advice       | an NFR or constraint no use case and no ADR links                         | `/architecture-decision`                            |
 
 With `--stack-plugin`, the combined plugin's commands replace `/use-case-implement`, `/use-case-test`,
-`/use-case-coverage`, and `/test-case-implement`, and the `/stack` rows do not apply.
+`/use-case-coverage`, and `/test-case-implement`, and the `/stack` rows do not apply. The audit is `/coverage-check`
+in `aiup-blazor-dotnet`, `aiup-vaadin-jooq`, and `aiup-angular-jpa`; `aiup-nestjs-nextjs` has none, so its first test
+skill takes the audit's place.
 
 A secondary actor without a row under `## External systems` may be a person or a role; the step says "if it is a
 system our system calls". A functional requirement, a missing specification, or a lint error that the baseline

@@ -92,7 +92,8 @@ with the ids that stop at each stage. An Obsolete test case does not count,
 and an NFR or constraint no use case links is listed as system-wide. It reads
 docs/ only; whether code and
 tests realize the use cases is /use-case-coverage (layer plugins) or
-/coverage-check (the deprecated aiup-vaadin-jooq and aiup-angular-jpa).
+/coverage-check (aiup-blazor-dotnet and the deprecated aiup-vaadin-jooq and
+aiup-angular-jpa).
 
 Both also list the open questions that are Open or Answered, and the
 architecture decisions with the requirements they link.
@@ -2401,7 +2402,7 @@ CONSTRUCTION = {
                          "/coverage-check", "/playwright-test"),
     "aiup-blazor-dotnet": ("/implement", ["/dotnet-test", "/bunit-test",
                                           "/playwright-test"],
-                           None, "/playwright-test"),
+                           "/coverage-check", "/playwright-test"),
     "aiup-nestjs-nextjs": ("/implement", ["/nest-test", "/react-test",
                                           "/playwright-test"],
                            None, "/playwright-test"),
@@ -4578,8 +4579,10 @@ def self_test():
                                 + str(got))
             if "/coverage-check UC-001" not in next_commands(
                     root, validator, bpmn, anchors, "aiup-vaadin-jooq") \
-                    or "/dotnet-test UC-001" not in next_commands(
-                        root, validator, bpmn, anchors, "aiup-blazor-dotnet"):
+                    or "/coverage-check UC-001" not in next_commands(
+                        root, validator, bpmn, anchors, "aiup-blazor-dotnet") \
+                    or "/nest-test UC-001" not in next_commands(
+                        root, validator, bpmn, anchors, "aiup-nestjs-nextjs"):
                 failures.append("changed: /next should name the audit, or "
                                 "the tests of a stack without one")
 

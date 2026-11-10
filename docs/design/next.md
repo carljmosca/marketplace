@@ -38,7 +38,8 @@ specifications.)
   changes nothing has no result to propose.
 - **Combined stack plugins.** A project uses layer plugins or one combined stack plugin. The script cannot see which
   plugins are installed, but the agent can: the skill passes `--stack-plugin` when a combined plugin's `/implement`
-  is available, and the script then uses that plugin's commands and drops the `/stack` steps.
+  is available, and the script then uses that plugin's commands and drops the `/stack` steps. A combined plugin
+  without a coverage audit (`aiup-nestjs-nextjs`) gets its first test skill where the audit would be.
 - **Careful signals.** A secondary actor without a row under `## External systems` may be a person or a role, so the
   step says "if it is a system our system calls", and a name that is a primary actor elsewhere is skipped. A test case
   is offered for automation only when every use case it chains is implemented and the stack has an E2E layer. Release
