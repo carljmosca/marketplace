@@ -19,6 +19,9 @@ Bring the EF Core model in line with `docs/entity_model.md`:
    are needed so the new entities are part of the model.
 3. **Migration**: this environment has no .NET SDK installed, so do **not** try to execute the EF
    Core CLI. Instead, finish by writing out the exact migration command the team should run,
-   following this project's migration naming convention for use-case-driven schema changes.
+   with the migration name the ef-migration conventions call for.
 
 Do **not** create any test files, and do **not** put database credentials anywhere in source code.
+
+This session's conversation is not kept. Append every message you write to the user, word for word and in order, to
+`session-log.md` in the root of the working directory; that log is not part of the project.

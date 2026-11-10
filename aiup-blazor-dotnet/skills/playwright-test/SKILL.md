@@ -119,7 +119,10 @@ state are the subject — do not re-test every validation message of each use ca
    - Create the `UseCaseAttribute` if the E2E project lacks it (see "Traceability").
    - Name the class `UC<id><UseCaseName>IT` for a use case or `TC<id><JourneyName>IT` for a test case.
    - Inherit from `Microsoft.Playwright.Xunit.PageTest`.
-   - Configure a web application test server fixture (`WebApplicationFactory<Program>` or custom host fixture) to launch the app automatically on a dynamic port during test execution, or read base URL from configuration (`https://localhost:5001`).
+   - Decide where the application runs, following what the E2E project already does:
+     - **In the test process** — a `WebApplicationFactory<Program>` fixture that serves on a real Kestrel port (ASP.NET Core 10: `UseKestrel()`, then `StartServer()`, and take the base address from the factory). The default `WebApplicationFactory` serves through an in-memory `TestServer` that a browser cannot reach, so never point Playwright at it without Kestrel.
+     - **In a separate process** — `dotnet run`, a container, or a CI deployment; the fixture only reads the base URL (`E2E_BASE_URL`, falling back to the project's launch profile), as in the example below.
+   - Browsers come from the Playwright .NET tooling (`pwsh bin/Debug/net10.0/playwright.ps1 install` after a build), not from Node.js. When they are missing, name the command in your report instead of installing them unasked.
 3. **Implement E2E User Journeys**:
    - For a use case: one test per main success scenario, alternative flow, and observable business rule, each with `[UseCase(...)]`.
    - For a test case: follow "Test Case Journeys (TC-*)" above.
@@ -157,3 +160,36 @@ state are the subject — do not re-test every validation message of each use ca
    ```
 4. **Verification**:
    - Run `dotnet test` to execute end-to-end tests against the application; on a failure, decide first whether the test or the code is wrong — see [When a Test Fails](#when-a-test-fails).
+5. **Report and hand off** — see [Coverage Check](#coverage-check) below.
+
+## Test Data
+
+The preconditions of a use case or test case need rows in the database before the browser starts.
+Seed them the way the project already does — an EF Core `HasData` seed applied only in the test
+environment, a seeding step in the fixture that uses the application's `DbContext`, or a SQL script
+the E2E project runs — and extend that one place. Never insert rows from inside a test step, and
+never seed through a production code path that the specification does not describe. A flow whose
+trigger the shared test data rules out (an empty list, a first-ever record) gets a fixture or a
+database of its own; never delete shared rows to provoke it. When the application runs in a separate
+process with one fixed data set, leave such a flow to `/bunit-test` or `/dotnet-test` and list it in
+your report as not automated here.
+
+## Coverage Check
+
+Do **not** run the `uc-coverage` sub-agent from this skill, and do not audit the tests against the
+specification yourself. The audit is a separate, explicit step that belongs to
+`/coverage-check`: it judges implementation and tests together in
+one matrix, and it is the only audit behind a justified `**Status:** Tested` (for a test case, `Automated`).
+
+Finish instead by:
+
+- Summarising which tests you wrote and whether the suite passes, with the test command you ran.
+- Ending with one hand-off line: `Next: /coverage-check UC-XXX`. For a journey, hand off `TC-XXX`
+  instead. If the test file is still unfinished, suggest `/coverage-check UC-XXX tests wip` so the
+  audit lists remaining work instead of defects.
+- Leaving the specification's `**Status:**` line alone; the audit suggests the next value.
+
+Running the audit here would triple it — once after implementation, once after tests, once in
+`/coverage-check`. Each run re-reads the specification and the code base and takes minutes; one
+run at the end, in `both` mode, is the one that counts. Whether to run it now, later, or not at
+all is the user's call.

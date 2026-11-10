@@ -16,8 +16,9 @@ and completely tested. There are two kinds of it:
   `/test-case-coverage` (a journey), both in `aiup-core`.
 - **`agents/uc-coverage.md` of a combined stack plugin** — a copy per stack with a marker table fixed to that stack
   (`@UseCase`, `UC<id>…Test`, `describe('UC-XXX: …')`, `UC<id>…IT` / `TC<id>…IT`), behind that plugin's
-  `/coverage-check`. Only the deprecated `aiup-vaadin-jooq` and `aiup-angular-jpa` ship one, and they go with those
-  plugins; `aiup-blazor-dotnet` and the deprecated `aiup-nestjs-nextjs` have no audit.
+  `/coverage-check`. `aiup-blazor-dotnet` ships one (`[UseCase]`, `UC<id>…Test`, `UC<id>…HandlerTest`, `UC<id>…IT` /
+  `TC<id>…IT`), and so do the deprecated `aiup-vaadin-jooq` and `aiup-angular-jpa`, whose copies go with those plugins;
+  the deprecated `aiup-nestjs-nextjs` has no audit.
 
 Either agent derives coverage units from the specification (every main success scenario step, alternative flow,
 business rule, precondition, postcondition, and every NFR and constraint on its `**Requirements:**` line — for a test

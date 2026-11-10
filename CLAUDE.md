@@ -81,12 +81,15 @@ marketplace/
 │   ├── .mcp.json                 # MicrosoftLearn, context7, Playwright
 │   ├── plugin.json               # Agent Plugins manifest (agent-plugins.org)
 │   ├── mcp.json                  # Agent Plugins MCP config
+│   ├── agents/                   # Sub-agents (Claude Code)
+│   │   └── uc-coverage.md        # Read-only use case coverage auditor (Blazor/.NET markers)
 │   └── skills/                   # All workflow steps as skills (slash commands)
 │       ├── ef-migration/
 │       ├── implement/
 │       ├── bunit-test/
 │       ├── dotnet-test/
-│       └── playwright-test/
+│       ├── playwright-test/
+│       └── coverage-check/
 ├── aiup-nestjs-nextjs/           # NestJS + Drizzle / Next.js technology stack plugin
 │   ├── .claude-plugin/
 │   │   └── plugin.json           # Claude Code manifest
@@ -433,6 +436,12 @@ skills hand off to `/coverage-check UC-XXX`.
 | Construction | `/bunit-test`         | Create bUnit component tests for Blazor `.razor` pages               |
 | Construction | `/dotnet-test`        | Create backend integration tests for EF Core and domain handlers     |
 | Construction | `/playwright-test`    | Create native C# Playwright E2E tests (`Microsoft.Playwright.Xunit`) |
+| Construction | `/coverage-check`     | Audit a UC-* or TC-* for implementation and test coverage            |
+
+Same coverage design as aiup-vaadin-jooq (see below): `agents/uc-coverage.md` is this plugin's own copy with
+`[UseCase]`, `UC<id>…Test`, `UC<id>…HandlerTest`, and `UC<id>…IT` / `TC<id>…IT` markers; `/implement` hands off to
+`/dotnet-test` and `/bunit-test`, and the test skills hand off to `/coverage-check UC-XXX`. The plugin declares
+`aiup-core` ≥ 3.12.0, because `/implement` and `/ef-migration` read `/open-questions` by glob.
 
 ### Vaadin/jOOQ (stack-specific, deprecated)
 
@@ -458,9 +467,9 @@ Rules a change must keep:
   close the gaps they report and never restate the agent's checklist.
 - Drift: the agent names both fixes and recommends neither; the front door asks which side is right.
 - Construction skills hand off to the audit; they never run the agent themselves.
-- `aiup-vaadin-jooq` and `aiup-angular-jpa` each have their own agent copy with their own markers (`aiup-blazor-dotnet`
-  and `aiup-nestjs-nextjs` have no agent and no `/coverage-check`); the layered agent has none and reads the Markers
-  table of the stack file.
+- `aiup-blazor-dotnet`, `aiup-vaadin-jooq`, and `aiup-angular-jpa` each have their own agent copy with their own
+  markers (`aiup-nestjs-nextjs` has no agent and no `/coverage-check`); the layered agent has none and reads the
+  Markers table of the stack file.
 
 Why: [`docs/design/coverage-agent.md`](docs/design/coverage-agent.md).
 

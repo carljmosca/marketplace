@@ -29,7 +29,8 @@ LEFT_OUT = {
     "aiup-core/next", "aiup-core/use-case-coverage", "aiup-core/test-case-coverage",
     "aiup-core/open-questions", "aiup-core/architecture-decision",
     "aiup-core/user-guide", "aiup-core/acceptance-protocol", "aiup-core/release-notes",
-    "aiup-vaadin-jooq/coverage-check", "aiup-angular-jpa/coverage-check", "aiup-vaadin-jooq/karibu-test",
+    "aiup-vaadin-jooq/coverage-check", "aiup-angular-jpa/coverage-check", "aiup-blazor-dotnet/coverage-check",
+    "aiup-vaadin-jooq/karibu-test",
 }
 # Catalogue skills whose run gets no specification diff: they write a document or a schema as a whole.
 NO_DIFF = {

@@ -153,6 +153,25 @@ convention; then follow that one.
    - **Assert**: Verify expected outcome, returned DTOs, or database state using a *third* fresh `DbContext` instance.
 5. **Verification**:
    - Execute `dotnet test` to confirm tests pass; on a failure, decide first whether the test or the code is wrong — see [When a Test Fails](#when-a-test-fails).
-6. **Next Step Guidance**:
-   - Conclude your response by guiding the user on E2E testing:
-   > "Next step: Run `/playwright-test` to generate native C# end-to-end browser tests for your use cases."
+6. **Report and hand off** — see [Coverage Check](#coverage-check) below.
+
+## Coverage Check
+
+Do **not** run the `uc-coverage` sub-agent from this skill, and do not audit the tests against the
+specification yourself. The audit is a separate, explicit step that belongs to
+`/coverage-check`: it judges implementation and tests together in
+one matrix, and it is the only audit behind a justified `**Status:** Tested`.
+
+Finish instead by:
+
+- Summarising which tests you wrote and whether the suite passes, with the test command you ran.
+- Ending with one hand-off line: `Next: /bunit-test UC-XXX` when the use case has a page whose
+  `UC<id><Name>Test` does not exist yet, otherwise `Next: /coverage-check UC-XXX`. If the test
+  class is still unfinished, suggest `/coverage-check UC-XXX tests wip` so the audit lists remaining
+  work instead of defects.
+- Leaving the specification's `**Status:**` line alone; the audit suggests the next value.
+
+Running the audit here would triple it — once after implementation, once after tests, once in
+`/coverage-check`. Each run re-reads the specification and the code base and takes minutes; one
+run at the end, in `both` mode, is the one that counts. Whether to run it now, later, or not at
+all is the user's call.

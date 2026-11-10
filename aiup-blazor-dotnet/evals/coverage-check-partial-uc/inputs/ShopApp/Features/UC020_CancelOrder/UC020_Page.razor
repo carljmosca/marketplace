@@ -1,0 +1,74 @@
+@page "/orders"
+@rendermode InteractiveServer
+@using ShopApp.Security
+@inject UC020_Handler Handler
+@inject ICurrentCustomer CurrentCustomer
+
+<h1>My orders</h1>
+
+@if (_message is not null)
+{
+    <div class="notification" role="status">@_message</div>
+}
+
+<table class="orders">
+    <thead>
+        <tr><th>Order</th><th>Status</th><th></th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var order in _orders)
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>@order.Status</td>
+                <td><button id="cancel-@order.Id" @onclick="() => AskToCancel(order)">Cancel order</button></td>
+                <td><button id="reorder-@order.Id" @onclick="Reorder">Reorder</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (_pending is not null)
+{
+    <div class="dialog" role="dialog" aria-label="Cancel order">
+        <p>Do you really want to cancel this order?</p>
+        <button id="confirm-cancel" @onclick="ConfirmCancel">Cancel order</button>
+        <button id="abort-cancel" @onclick="() => _pending = null">Keep order</button>
+    </div>
+}
+
+@code {
+    private List<UC020_OrderRow> _orders = [];
+    private UC020_OrderRow? _pending;
+    private string? _message;
+
+    protected override async Task OnInitializedAsync() => await RefreshAsync();
+
+    private async Task RefreshAsync() =>
+        _orders = await Handler.ListOrdersAsync(CurrentCustomer.Id, CancellationToken.None);
+
+    private void AskToCancel(UC020_OrderRow order)
+    {
+        if (order.Status == "Shipped")
+        {
+            _message = "Shipped orders cannot be cancelled";
+            return;
+        }
+        _pending = order;
+    }
+
+    private async Task ConfirmCancel()
+    {
+        var result = await Handler.CancelAsync(
+            new UC020_Command(CurrentCustomer.Id, _pending!.Id), CancellationToken.None);
+        _pending = null;
+        _message = result.Message;
+        await RefreshAsync();
+    }
+
+    private async Task Reorder()
+    {
+        _message = "Order placed again";
+        await RefreshAsync();
+    }
+}

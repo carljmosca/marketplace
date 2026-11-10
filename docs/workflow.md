@@ -270,10 +270,10 @@ move a finished use case forward to `Implemented` or `Tested` in the same pull r
 the language of the specification, so the new status arrives only when someone merges the pull request.
 `aiup-generate` does not advance the status when the skill only recorded open questions or a blocking question names
 the use case. The
-implementation and test skills leave the line alone, and the coverage audit (`/use-case-coverage` with layer plugins, `/coverage-check` in the
-deprecated `aiup-vaadin-jooq` and `aiup-angular-jpa`) only suggests the next value: `Implemented` when the implementation is complete, `Tested` when the tests are complete too
+implementation and test skills leave the line alone, and the coverage audit (`/use-case-coverage` with layer plugins, `/coverage-check` in
+`aiup-blazor-dotnet` and the deprecated `aiup-vaadin-jooq` and `aiup-angular-jpa`) only suggests the next value: `Implemented` when the implementation is complete, `Tested` when the tests are complete too
 and the suite passes. It never suggests `Done`, because acceptance is not visible in code, and never `Tested` while a
-blocking open question holds the use case. `aiup-blazor-dotnet` and the deprecated `aiup-nestjs-nextjs` have no audit, so there you
+blocking open question holds the use case. The deprecated `aiup-nestjs-nextjs` has no audit, so there you
 decide from the code and the tests.
 
 The status also decides what the skills do with a use case:
@@ -487,9 +487,9 @@ code base and takes minutes, so the check runs once, explicitly, when you ask fo
 A use case whose coverage matrix is complete in both columns is the point at which `**Status:** Tested` is justified.
 That is what `/use-case-coverage UC-001` is for; the skill reports the justified status but leaves the line to you.
 
-The agent reads the markers from `docs/architecture/stack.md`. The deprecated `aiup-vaadin-jooq` and `aiup-angular-jpa`
-run the same audit with their own `/coverage-check` and `uc-coverage` agent, whose marker table is fixed to the stack.
-`aiup-blazor-dotnet` and the deprecated `aiup-nestjs-nextjs` do not ship an equivalent; the same check can be run by hand from
+The agent reads the markers from `docs/architecture/stack.md`. `aiup-blazor-dotnet` and the deprecated `aiup-vaadin-jooq` and
+`aiup-angular-jpa` run the same audit with their own `/coverage-check` and `uc-coverage` agent, whose marker table is
+fixed to the stack. The deprecated `aiup-nestjs-nextjs` does not ship an equivalent; the same check can be run by hand from
 [the agent definition](../aiup-core/agents/uc-coverage-layered.md) with the markers of the stack in question.
 
 ## Transition
